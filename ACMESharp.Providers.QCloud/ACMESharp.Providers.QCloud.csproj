@@ -40,8 +40,8 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="QCloudAPI_SDK, Version=1.0.6561.37104, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\QCloudAPI_SDK.1.0.6561.37104\lib\net45\QCloudAPI_SDK.dll</HintPath>
+    <Reference Include="QCloudAPI_SDK, Version=1.0.6562.37487, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QCloudAPI_SDK.1.0.6562.37485\lib\net45\QCloudAPI_SDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
