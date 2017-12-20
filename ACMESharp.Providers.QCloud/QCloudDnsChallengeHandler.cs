@@ -42,18 +42,21 @@ namespace ACMESharp.Providers.QCloud
             cns.setConfig(new SortedDictionary<string, object>(StringComparer.Ordinal) { { "SecretId", SecretId }, { "SecretKey", SecretKey }, { "RequestMethod", "GET" } });
 
             var recordName = dnsChallenge.RecordName;
-            var topAndSecondLevelName = new StringBuilder();
-            var subDomainName = new StringBuilder();
+            var topAndSecondLevelNameBuilder = new StringBuilder();
+            var subDomainNameBuilder = new StringBuilder();
             byte level = 0;
             for (int i = recordName.Length - 1; i >= 0; i--)
             {
                 if (recordName[i] == '.' && level < 2)
                     level++;
                 if (level < 2)
-                    topAndSecondLevelName.Insert(0, recordName[i]);
+                    topAndSecondLevelNameBuilder.Insert(0, recordName[i]);
                 else
-                    subDomainName.Insert(0, recordName[i]);
+                    subDomainNameBuilder.Insert(0, recordName[i]);
             }
+            var topAndSecondLevelName = topAndSecondLevelNameBuilder.ToString();
+            var subDomainName = subDomainNameBuilder.ToString();
+            subDomainName = subDomainName.Substring(0, subDomainName.Length - 1);
             ctx.Out.WriteLine("Getting domain information for " + recordName + '.');
             var recordListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("RecordList", new SortedDictionary<string, object>(StringComparer.Ordinal)
             {

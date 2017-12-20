@@ -63,7 +63,6 @@
     <None Include="ACMESharp.Providers.QCloud.psd1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="build.ps1" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
