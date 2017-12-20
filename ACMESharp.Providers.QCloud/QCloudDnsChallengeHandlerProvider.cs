@@ -20,7 +20,16 @@ namespace ACMESharp.Providers.QCloud
 
         public IEnumerable<ParameterDetail> DescribeParameters() => PARAMS;
 
-        public IChallengeHandler GetHandler(Challenge c, IReadOnlyDictionary<string, object> initParams) => new QCloudDnsChallengeHandler();
+        public IChallengeHandler GetHandler(Challenge c, IReadOnlyDictionary<string, object> initParams) {
+            var handler = new QCloudDnsChallengeHandler()
+            {
+                SecretId = initParams[nameof(QCloudDnsChallengeHandler.SecretId)]?.ToString() ?? throw new ArgumentNullException(nameof(QCloudDnsChallengeHandler.SecretId)),
+                SecretKey = initParams[nameof(QCloudDnsChallengeHandler.SecretKey)]?.ToString() ?? throw new ArgumentNullException(nameof(QCloudDnsChallengeHandler.SecretKey)),
+            };
+            if (initParams.TryGetValue(nameof(QCloudDnsChallengeHandler.Line), out var line))
+                handler.Line = line as string ?? throw new InvalidCastException(nameof(QCloudDnsChallengeHandler.Line) + " has to be a string.");
+            return handler;
+        }
 
         public bool IsSupported(Challenge c) => c is DnsChallenge;
     }

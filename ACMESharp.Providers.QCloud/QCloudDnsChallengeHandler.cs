@@ -13,7 +13,7 @@ namespace ACMESharp.Providers.QCloud
     {
         public string SecretId { get; set; }
         public string SecretKey { get; set; }
-        public string Line { get; set; }
+        public string Line { get; set; } = "默认";
 
         public bool IsDisposed { get; private set; }
 
@@ -29,10 +29,17 @@ namespace ACMESharp.Providers.QCloud
 
         public void Handle(ChallengeHandlingContext ctx)
         {
-            DnsChallenge dnsChallenge = ctx.Challenge as DnsChallenge;
+            if (string.IsNullOrEmpty(SecretId))
+                throw new ArgumentNullException(nameof(SecretId));
+            if (string.IsNullOrEmpty(SecretKey))
+                throw new ArgumentNullException(nameof(SecretKey));
+            if (string.IsNullOrEmpty(Line))
+                throw new ArgumentNullException(nameof(Line));
+
+            DnsChallenge dnsChallenge = (DnsChallenge)ctx.Challenge;
 
             var cns = new QCloudAPI_SDK.Module.Cns();
-            cns.setConfig(new SortedDictionary<string, object>() { { "SecretId", SecretId }, { "SecretKey", SecretKey }, { "RequestMethod", "GET" } });
+            cns.setConfig(new SortedDictionary<string, object>(StringComparer.Ordinal) { { "SecretId", SecretId }, { "SecretKey", SecretKey }, { "RequestMethod", "GET" } });
 
             var recordName = dnsChallenge.RecordName;
             var topAndSecondLevelName = new StringBuilder();
@@ -47,8 +54,8 @@ namespace ACMESharp.Providers.QCloud
                 else
                     subDomainName.Insert(0, recordName[i]);
             }
-
-            var recordListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("RecordList", new SortedDictionary<string, object>()
+            ctx.Out.WriteLine("Getting domain information for " + recordName + '.');
+            var recordListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("RecordList", new SortedDictionary<string, object>(StringComparer.Ordinal)
             {
                 {"domain", topAndSecondLevelName },
                 {"offset", 0 },
@@ -59,12 +66,15 @@ namespace ACMESharp.Providers.QCloud
 
             ThrowQCloudError(recordListResponse);
 
-            var record = (JArray)recordListResponse["records"];
+            var record = (JArray)recordListResponse["data"]["records"];
+
+            ctx.Out.WriteLine(record.Count + " existing record for " + recordName + " is found.");
 
             if (record.Count == 1)
             {
                 //If record already exist.
-                var domainListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("DomainList", new SortedDictionary<string, object>()
+                ctx.Out.WriteLine("Adding new record " + subDomainName + " in domain " + topAndSecondLevelName + ".");
+                var domainListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("RecordModify", new SortedDictionary<string, object>(StringComparer.Ordinal)
                 {
                     {"domain", topAndSecondLevelName },
                     {"recordId", (int)record[0]["id"] },
@@ -80,12 +90,13 @@ namespace ACMESharp.Providers.QCloud
             else if (record.Count == 0)
             {
                 //If record does not exist.
-                var domainListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("DomainList", new SortedDictionary<string, object>()
+                ctx.Out.WriteLine("Updating record " + subDomainName + " in domain " + topAndSecondLevelName + ".");
+                var domainListResponse = (JObject)JsonConvert.DeserializeObject(cns.Call("RecordCreate", new SortedDictionary<string, object>(StringComparer.Ordinal)
                 {
                     {"domain", topAndSecondLevelName },
                     {"subDomain", subDomainName },
                     {"recordType", "TXT" },
-                    {"recordLine", (string)record[0]["默认"] },
+                    {"recordLine", Line },
                     {"value", dnsChallenge.RecordValue },
                 }));
                 ThrowQCloudError(domainListResponse);
